@@ -58,4 +58,4 @@ using the guidelines above. Keep it concise (under 150 words). End with a one-li
         except Exception as e:
             last_error = e
             continue
-    return f"AI correction temporarily
+        return "AI correction temporarily unavailable right now. Please try again in a minute."
