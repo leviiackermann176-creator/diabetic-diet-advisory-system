@@ -47,7 +47,7 @@ Explain briefly WHY the baseline model's raw signal might be misleading (if appl
 using the guidelines above. Keep it concise (under 150 words). End with a one-line practical recommendation.
 """
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model="gemini-3.8-flash",
         contents=prompt
     )
     return response.text
