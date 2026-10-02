@@ -61,6 +61,10 @@ using the guidelines above. Keep it concise (under 150 words). End with a one-li
     return f"AI correction temporarily unavailable (all models busy). Please try again in a minute. (Error: {last_error})"
 
 # ---------- PDF generation ----------
+def clean_text(text):
+    # Remove/replace characters that the PDF library (latin-1 only) can't handle
+    return text.encode('latin-1', 'replace').decode('latin-1')
+
 def generate_pdf(user_profile, food_item, baseline_text, ai_text):
     pdf = FPDF()
     pdf.add_page()
@@ -68,12 +72,12 @@ def generate_pdf(user_profile, food_item, baseline_text, ai_text):
     pdf.cell(200, 10, txt="Personalized Diabetic Diet Report", ln=True, align='C')
     pdf.set_font("Arial", size=11)
     pdf.ln(10)
-    pdf.multi_cell(0, 8, f"User Profile: {user_profile}")
-    pdf.multi_cell(0, 8, f"Food Item: {food_item}")
+    pdf.multi_cell(0, 8, clean_text(f"User Profile: {user_profile}"))
+    pdf.multi_cell(0, 8, clean_text(f"Food Item: {food_item}"))
     pdf.ln(5)
-    pdf.multi_cell(0, 8, f"Baseline Model Verdict: {baseline_text}")
+    pdf.multi_cell(0, 8, clean_text(f"Baseline Model Verdict: {baseline_text}"))
     pdf.ln(5)
-    pdf.multi_cell(0, 8, f"AI-Corrected Assessment:\n{ai_text}")
+    pdf.multi_cell(0, 8, clean_text(f"AI-Corrected Assessment:\n{ai_text}"))
     path = "diet_report.pdf"
     pdf.output(path)
     return path
