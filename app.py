@@ -2,7 +2,7 @@ import streamlit as st
 import pickle
 import numpy as np
 from fpdf import FPDF
-import google.generativeai as genai
+from google import genai
 
 # ---------- Load model ----------
 with open('best_model.pkl', 'rb') as f:
@@ -32,8 +32,7 @@ def baseline_predict(glucose, bmi, age, bp):
 
 # ---------- AI correction layer ----------
 def ai_correct(food_item, baseline_verdict, prob, user_profile):
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model_ai = genai.GenerativeModel("gemini-2.5-flash")
+    client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
     prompt = f"""You are a nutritionist agent. A baseline ML model gave this raw verdict
 for a user's diabetes risk: {'HIGH RISK' if baseline_verdict==1 else 'LOW RISK'} (probability: {prob:.2f}).
 
@@ -47,7 +46,10 @@ Task: Give a corrected, context-aware dietary assessment of this food item for t
 Explain briefly WHY the baseline model's raw signal might be misleading (if applicable),
 using the guidelines above. Keep it concise (under 150 words). End with a one-line practical recommendation.
 """
-    response = model_ai.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt
+    )
     return response.text
 
 # ---------- PDF generation ----------
