@@ -24,6 +24,10 @@ st.set_page_config(
 st.markdown("""
 <style>
 
+/* ============================================================
+   MAIN APP BACKGROUND
+   ============================================================ */
+
 .stApp {
     background:
         radial-gradient(
@@ -51,7 +55,9 @@ st.markdown("""
 }
 
 
-/* ---------- Titles ---------- */
+/* ============================================================
+   MAIN HEADINGS
+   ============================================================ */
 
 h1 {
     color: #064E3B !important;
@@ -75,7 +81,9 @@ p {
 }
 
 
-/* ---------- Sidebar ---------- */
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
 
 section[data-testid="stSidebar"] {
     background:
@@ -114,11 +122,14 @@ section[data-testid="stSidebar"] * {
 }
 
 
-/* ---------- Dividers ---------- */
+/* ============================================================
+   DIVIDERS
+   ============================================================ */
 
 hr {
     border: none !important;
     height: 1px !important;
+
     background:
         linear-gradient(
             90deg,
@@ -129,7 +140,9 @@ hr {
 }
 
 
-/* ---------- Labels ---------- */
+/* ============================================================
+   INPUT LABELS
+   ============================================================ */
 
 label {
     color: #064E3B !important;
@@ -137,42 +150,55 @@ label {
 }
 
 
-/* ---------- Number Inputs ---------- */
+/* ============================================================
+   NUMBER INPUTS
+   ============================================================ */
 
 div[data-testid="stNumberInput"] input {
     background: #FFFFFF !important;
     color: #064E3B !important;
+
     border: 1px solid #B7DED0 !important;
     border-radius: 12px !important;
+
     font-weight: 600 !important;
 }
 
 div[data-testid="stNumberInput"] input:focus {
     border: 2px solid #10B981 !important;
+
     box-shadow:
         0 0 0 3px rgba(16, 185, 129, 0.12) !important;
 }
 
 
-/* ---------- Text Input ---------- */
+/* ============================================================
+   TEXT INPUT
+   ============================================================ */
 
 div[data-testid="stTextInput"] input {
     background: #FFFFFF !important;
     color: #064E3B !important;
+
     border: 1px solid #B7DED0 !important;
     border-radius: 12px !important;
+
     padding: 12px !important;
+
     font-size: 16px !important;
 }
 
 div[data-testid="stTextInput"] input:focus {
     border: 2px solid #10B981 !important;
+
     box-shadow:
         0 0 0 3px rgba(16, 185, 129, 0.12) !important;
 }
 
 
-/* ---------- Analyze Button ---------- */
+/* ============================================================
+   ANALYZE BUTTON
+   ============================================================ */
 
 div.stButton > button {
     width: 100%;
@@ -185,7 +211,7 @@ div.stButton > button {
             #14B8A6 100%
         ) !important;
 
-    color: white !important;
+    color: #FFFFFF !important;
 
     border: none !important;
 
@@ -203,6 +229,14 @@ div.stButton > button {
     transition: all 0.25s ease;
 }
 
+div.stButton > button p {
+    color: #FFFFFF !important;
+}
+
+div.stButton > button span {
+    color: #FFFFFF !important;
+}
+
 div.stButton > button:hover {
     transform: translateY(-2px);
 
@@ -211,57 +245,179 @@ div.stButton > button:hover {
 }
 
 
-/* ---------- Download Button ---------- */
+/* ============================================================
+   DOWNLOAD PDF BUTTON
+   ============================================================ */
 
-div.stDownloadButton > button {
-    width: 100%;
+div[data-testid="stDownloadButton"] button {
+    width: 100% !important;
 
     background:
         linear-gradient(
             135deg,
-            #334155,
-            #475569
+            #334155 0%,
+            #475569 100%
         ) !important;
 
-    color: white !important;
+    color: #FFFFFF !important;
 
     border: none !important;
 
     border-radius: 13px !important;
 
-    min-height: 50px;
+    min-height: 52px !important;
+
+    font-size: 16px !important;
 
     font-weight: 700 !important;
+
+    box-shadow:
+        0 7px 18px rgba(51, 65, 85, 0.20);
+
+    transition: all 0.25s ease;
+}
+
+div[data-testid="stDownloadButton"] button p {
+    color: #FFFFFF !important;
+}
+
+div[data-testid="stDownloadButton"] button span {
+    color: #FFFFFF !important;
+}
+
+div[data-testid="stDownloadButton"] button:hover {
+    background:
+        linear-gradient(
+            135deg,
+            #1E293B 0%,
+            #334155 100%
+        ) !important;
+
+    color: #FFFFFF !important;
+
+    transform: translateY(-2px);
 }
 
 
-/* ---------- Alerts ---------- */
+/* ============================================================
+   AI NUTRITION INSIGHT
+   IMPORTANT:
+   NO FIXED HEIGHT
+   NO MAX HEIGHT
+   NO SCROLLING
+   ============================================================ */
+
+.nutrition-insight {
+    background:
+        linear-gradient(
+            135deg,
+            #047857 0%,
+            #059669 50%,
+            #0D9488 100%
+        );
+
+    color: #FFFFFF !important;
+
+    padding: 22px 24px;
+
+    border-radius: 16px;
+
+    margin-top: 10px;
+    margin-bottom: 20px;
+
+    box-shadow:
+        0 8px 22px rgba(5, 150, 105, 0.20);
+
+    width: 100%;
+
+    height: auto !important;
+
+    min-height: 0 !important;
+
+    max-height: none !important;
+
+    overflow: visible !important;
+
+    white-space: normal !important;
+
+    word-wrap: break-word;
+
+    overflow-wrap: break-word;
+}
+
+.nutrition-insight-title {
+    color: #FFFFFF !important;
+
+    font-size: 18px;
+
+    font-weight: 750;
+
+    margin-bottom: 12px;
+}
+
+.nutrition-insight-text {
+    color: #FFFFFF !important;
+
+    font-size: 16px;
+
+    line-height: 1.7;
+
+    white-space: normal !important;
+
+    overflow: visible !important;
+
+    height: auto !important;
+
+    min-height: 0 !important;
+
+    max-height: none !important;
+
+    word-wrap: break-word;
+
+    overflow-wrap: break-word;
+}
+
+
+/* ============================================================
+   RESULT ALERTS
+   ============================================================ */
 
 div[data-testid="stAlert"] {
     border-radius: 14px !important;
 }
 
 
-/* ---------- Expander ---------- */
+/* ============================================================
+   EXPANDER
+   ============================================================ */
 
 div[data-testid="stExpander"] {
     border: 1px solid #CDE9DE !important;
+
     border-radius: 14px !important;
+
     background: rgba(255, 255, 255, 0.75) !important;
 }
 
 
-/* ---------- Footer ---------- */
+/* ============================================================
+   FOOTER
+   ============================================================ */
 
 .footer-text {
     text-align: center;
+
     color: #64748B;
+
     font-size: 12px;
+
     padding-top: 20px;
 }
 
 
-/* ---------- Hide Streamlit Menu ---------- */
+/* ============================================================
+   HIDE STREAMLIT DEFAULT BRANDING
+   ============================================================ */
 
 #MainMenu {
     visibility: hidden;
@@ -276,7 +432,7 @@ footer {
 
 
 # ============================================================
-# LOAD MODEL
+# LOAD ML MODEL
 # ============================================================
 
 @st.cache_resource
@@ -295,7 +451,7 @@ model, scaler = load_models()
 
 
 # ============================================================
-# GUIDELINES
+# DIETARY GUIDELINES
 # ============================================================
 
 GUIDELINES = """
@@ -322,7 +478,7 @@ Diabetic dietary guidelines (summary):
 
 
 # ============================================================
-# IMPORTANT: BASELINE ML PREDICTION
+# BASELINE ML PREDICTION
 # ============================================================
 
 def baseline_predict(glucose, bmi, age, bp):
@@ -362,7 +518,7 @@ diabetic dietary advisory application.
 Baseline ML result:
 {'HIGH RISK' if baseline_verdict == 1 else 'LOW RISK'}
 
-Probability:
+Model probability:
 {prob:.2f}
 
 User profile:
@@ -398,7 +554,7 @@ Keep the response below 150 words.
 
 Finish with ONE practical recommendation.
 
-Do not diagnose or treat any medical condition.
+Do not diagnose, treat, cure, or prevent any medical condition.
 """
 
     fallback_models = [
@@ -459,6 +615,17 @@ def generate_pdf(
 
     pdf.add_page()
 
+
+    # --------------------------------------------------------
+    # TITLE
+    # --------------------------------------------------------
+
+    pdf.set_text_color(
+        6,
+        78,
+        59
+    )
+
     pdf.set_font(
         "Arial",
         style="B",
@@ -474,6 +641,30 @@ def generate_pdf(
     )
 
     pdf.ln(8)
+
+
+    # --------------------------------------------------------
+    # USER INFORMATION
+    # --------------------------------------------------------
+
+    pdf.set_text_color(
+        30,
+        41,
+        59
+    )
+
+    pdf.set_font(
+        "Arial",
+        style="B",
+        size=11
+    )
+
+    pdf.cell(
+        0,
+        8,
+        "User Information",
+        ln=True
+    )
 
     pdf.set_font(
         "Arial",
@@ -498,25 +689,102 @@ def generate_pdf(
 
     pdf.ln(5)
 
+
+    # --------------------------------------------------------
+    # BASELINE MODEL
+    # --------------------------------------------------------
+
+    pdf.set_text_color(
+        6,
+        95,
+        70
+    )
+
+    pdf.set_font(
+        "Arial",
+        style="B",
+        size=11
+    )
+
+    pdf.cell(
+        0,
+        8,
+        "Baseline ML Model Verdict",
+        ln=True
+    )
+
+    pdf.set_text_color(
+        30,
+        41,
+        59
+    )
+
+    pdf.set_font(
+        "Arial",
+        size=11
+    )
+
     pdf.multi_cell(
         0,
         8,
-        clean_text(
-            f"Baseline Model Verdict: {baseline_text}"
-        )
+        clean_text(baseline_text)
     )
 
     pdf.ln(5)
 
+
+    # --------------------------------------------------------
+    # AI ASSESSMENT
+    # --------------------------------------------------------
+
+    pdf.set_text_color(
+        6,
+        95,
+        70
+    )
+
+    pdf.set_font(
+        "Arial",
+        style="B",
+        size=11
+    )
+
+    pdf.cell(
+        0,
+        8,
+        "AI-Corrected Dietary Assessment",
+        ln=True
+    )
+
+    pdf.set_text_color(
+        30,
+        41,
+        59
+    )
+
+    pdf.set_font(
+        "Arial",
+        size=11
+    )
+
     pdf.multi_cell(
         0,
         8,
-        clean_text(
-            f"AI-Corrected Dietary Assessment:\n{ai_text}"
-        )
+        clean_text(ai_text)
     )
 
     pdf.ln(12)
+
+
+    # --------------------------------------------------------
+    # DISCLAIMER
+    # --------------------------------------------------------
+
+    pdf.set_text_color(
+        100,
+        116,
+        139
+    )
 
     pdf.set_font(
         "Arial",
@@ -533,6 +801,11 @@ def generate_pdf(
         )
     )
 
+
+    # --------------------------------------------------------
+    # SAVE
+    # --------------------------------------------------------
+
     path = "diet_report.pdf"
 
     pdf.output(path)
@@ -546,7 +819,9 @@ def generate_pdf(
 
 with st.sidebar:
 
-    st.markdown("## 🩺 Diabetic Diet Advisory")
+    st.markdown(
+        "## 🩺 Diabetic Diet Advisory"
+    )
 
     st.markdown(
         '<p class="sidebar-subtitle">'
@@ -556,6 +831,11 @@ with st.sidebar:
     )
 
     st.divider()
+
+
+    # --------------------------------------------------------
+    # HOW IT WORKS
+    # --------------------------------------------------------
 
     st.markdown(
         '<p class="sidebar-section">HOW IT WORKS</p>',
@@ -581,13 +861,18 @@ with st.sidebar:
 
         <div class="sidebar-info">
         📊 <b>Step 4</b><br>
-        Receive an assessment.
+        Receive a personalized assessment.
         </div>
         """,
         unsafe_allow_html=True
     )
 
     st.divider()
+
+
+    # --------------------------------------------------------
+    # DIETARY FOCUS
+    # --------------------------------------------------------
 
     st.markdown(
         '<p class="sidebar-section">DIETARY FOCUS</p>',
@@ -611,6 +896,10 @@ with st.sidebar:
         <div class="sidebar-info">
         🍬 Limited refined sugar
         </div>
+
+        <div class="sidebar-info">
+        🥚 Balanced protein
+        </div>
         """,
         unsafe_allow_html=True
     )
@@ -626,11 +915,13 @@ with st.sidebar:
 # MAIN TITLE
 # ============================================================
 
-st.title("🩺 Diabetic Diet Advisory")
+st.title(
+    "🩺 Diabetic Diet Advisory"
+)
 
 st.write(
-    "Enter your health details and a food item to get "
-    "a personalized, AI-assisted dietary assessment."
+    "Enter your health details and a food item to receive "
+    "an AI-assisted, context-aware dietary assessment."
 )
 
 
@@ -638,9 +929,12 @@ st.write(
 # HEALTH INFORMATION
 # ============================================================
 
-st.subheader("👤 Your Health Information")
+st.subheader(
+    "👤 Your Health Information"
+)
 
 col1, col2, col3, col4 = st.columns(4)
+
 
 with col1:
 
@@ -651,6 +945,7 @@ with col1:
         value=45
     )
 
+
 with col2:
 
     glucose = st.number_input(
@@ -659,6 +954,7 @@ with col2:
         max_value=300,
         value=140
     )
+
 
 with col3:
 
@@ -669,6 +965,7 @@ with col3:
         value=25.0,
         step=0.1
     )
+
 
 with col4:
 
@@ -684,10 +981,12 @@ st.markdown("---")
 
 
 # ============================================================
-# FOOD INPUT
+# FOOD ANALYSIS
 # ============================================================
 
-st.subheader("🍽️ Food Analysis")
+st.subheader(
+    "🍽️ Food Analysis"
+)
 
 st.info(
     "💡 Tip: Enter the complete meal when possible. "
@@ -707,7 +1006,13 @@ st.write("")
 # ANALYZE BUTTON
 # ============================================================
 
-if st.button("🔍 Analyze Food"):
+if st.button(
+    "🔍 Analyze Food"
+):
+
+    # --------------------------------------------------------
+    # EMPTY FOOD CHECK
+    # --------------------------------------------------------
 
     if food_item.strip() == "":
 
@@ -717,9 +1022,9 @@ if st.button("🔍 Analyze Food"):
 
     else:
 
-        # ----------------------------------------------------
-        # BASELINE ML
-        # ----------------------------------------------------
+        # ====================================================
+        # BASELINE ML MODEL
+        # ====================================================
 
         with st.spinner(
             "🤖 Running baseline machine-learning model..."
@@ -733,16 +1038,18 @@ if st.button("🔍 Analyze Food"):
             )
 
             baseline_text = (
-                f"{'High diabetes risk' if pred == 1 else 'Low diabetes risk'} "
+                f"{'Higher-risk model signal' if pred == 1 else 'Lower-risk model signal'} "
                 f"(model probability: {prob:.0%})"
             )
 
 
-        # ----------------------------------------------------
+        # ====================================================
         # BASELINE RESULT
-        # ----------------------------------------------------
+        # ====================================================
 
-        st.subheader("📊 Baseline ML Model Verdict")
+        st.subheader(
+            "📊 Baseline ML Model Verdict"
+        )
 
         if pred == 1:
 
@@ -767,20 +1074,22 @@ if st.button("🔍 Analyze Food"):
             )
 
 
-        # ----------------------------------------------------
-        # FOOD
-        # ----------------------------------------------------
+        # ====================================================
+        # FOOD SELECTED
+        # ====================================================
 
-        st.subheader("🍴 Food Selected")
+        st.subheader(
+            "🍴 Food Selected"
+        )
 
         st.info(
             f"**{food_item}**"
         )
 
 
-        # ----------------------------------------------------
+        # ====================================================
         # USER PROFILE
-        # ----------------------------------------------------
+        # ====================================================
 
         user_profile = (
             f"Age: {age}, "
@@ -790,9 +1099,9 @@ if st.button("🔍 Analyze Food"):
         )
 
 
-        # ----------------------------------------------------
-        # AI CORRECTION
-        # ----------------------------------------------------
+        # ====================================================
+        # AI ANALYSIS
+        # ====================================================
 
         with st.spinner(
             "🧠 AI is evaluating the food using dietary guidelines..."
@@ -806,26 +1115,39 @@ if st.button("🔍 Analyze Food"):
             )
 
 
-        # ----------------------------------------------------
+        # ====================================================
         # AI RESULT
-        # ----------------------------------------------------
+        # ====================================================
 
         st.subheader(
             "🧠 AI-Corrected Dietary Assessment"
         )
 
-        st.success(
-            f"""
-            ✨ **Context-Aware Nutrition Insight**
+        # IMPORTANT:
+        # This is NOT a Streamlit alert.
+        # It has no fixed height and no scrolling.
 
-            {ai_text}
-            """
+        st.markdown(
+            f"""
+            <div class="nutrition-insight">
+
+                <div class="nutrition-insight-title">
+                    ✨ Context-Aware Nutrition Insight
+                </div>
+
+                <div class="nutrition-insight-text">
+                    {ai_text}
+                </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
 
-        # ----------------------------------------------------
-        # EXPLANATION
-        # ----------------------------------------------------
+        # ====================================================
+        # WHY AI CORRECTION?
+        # ====================================================
 
         with st.expander(
             "💡 Why does the AI correction layer matter?"
@@ -837,32 +1159,35 @@ if st.button("🔍 Analyze Food"):
                 patterns from the health measurements provided.
 
                 However, those measurements alone do not describe
-                the nutritional composition of a particular meal.
+                the complete nutritional composition of a particular
+                meal.
 
-                The AI layer adds context such as:
+                The AI layer adds additional dietary context such as:
 
-                🌾 Carbohydrate quality
+                🌾 **Carbohydrate quality**
 
-                🥗 Portion size
+                🥗 **Portion size**
 
-                🫘 Fiber
+                🫘 **Fiber content**
 
-                🥚 Protein
+                🥚 **Protein**
 
-                🍬 Added sugar
+                🍬 **Added sugar**
 
-                🧈 Fat quantity
+                🧈 **Fat quantity**
 
-                🍽️ Overall meal composition
+                🍽️ **Overall meal composition**
                 """
             )
 
 
-        # ----------------------------------------------------
-        # PDF
-        # ----------------------------------------------------
+        # ====================================================
+        # PDF REPORT
+        # ====================================================
 
-        st.subheader("📄 Personalized Report")
+        st.subheader(
+            "📄 Personalized Report"
+        )
 
         pdf_path = generate_pdf(
             user_profile,
@@ -871,7 +1196,10 @@ if st.button("🔍 Analyze Food"):
             ai_text
         )
 
-        with open(pdf_path, "rb") as pdf_file:
+        with open(
+            pdf_path,
+            "rb"
+        ) as pdf_file:
 
             st.download_button(
                 label="📥 Download PDF Report",
