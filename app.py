@@ -2,7 +2,7 @@ import streamlit as st
 import pickle
 import numpy as np
 from fpdf import FPDF
-import anthropic
+import google.generativeai as genai
 
 # ---------- Load model ----------
 with open('best_model.pkl', 'rb') as f:
@@ -32,7 +32,8 @@ def baseline_predict(glucose, bmi, age, bp):
 
 # ---------- AI correction layer ----------
 def ai_correct(food_item, baseline_verdict, prob, user_profile):
-    client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
+    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    model_ai = genai.GenerativeModel("gemini-1.5-flash")
     prompt = f"""You are a nutritionist agent. A baseline ML model gave this raw verdict
 for a user's diabetes risk: {'HIGH RISK' if baseline_verdict==1 else 'LOW RISK'} (probability: {prob:.2f}).
 
@@ -46,12 +47,8 @@ Task: Give a corrected, context-aware dietary assessment of this food item for t
 Explain briefly WHY the baseline model's raw signal might be misleading (if applicable),
 using the guidelines above. Keep it concise (under 150 words). End with a one-line practical recommendation.
 """
-    response = client.messages.create(
-        model="claude-sonnet-4-5",
-        max_tokens=400,
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return response.content[0].text
+    response = model_ai.generate_content(prompt)
+    return response.text
 
 # ---------- PDF generation ----------
 def generate_pdf(user_profile, food_item, baseline_text, ai_text):
@@ -79,4 +76,24 @@ age = st.number_input("Age", 18, 90, 45)
 glucose = st.number_input("Glucose level (mg/dL)", 70, 300, 140)
 bmi = st.number_input("BMI", 15.0, 50.0, 25.0)
 bp = st.number_input("Blood Pressure", 60, 140, 80)
-food_item = st.text_input("Food item eaten (e.g., 'Bajra roti with ghee and
+food_item = st.text_input("Food item eaten (e.g., 'Bajra roti with ghee and jaggery')")
+
+if st.button("Analyze"):
+    if food_item.strip() == "":
+        st.warning("Please enter a food item.")
+    else:
+        with st.spinner("Running baseline model..."):
+            pred, prob = baseline_predict(glucose, bmi, age, bp)
+            baseline_text = f"{'High diabetes risk' if pred==1 else 'Low diabetes risk'} (confidence: {prob:.0%})"
+        st.subheader("Baseline ML Model Verdict")
+        st.write(baseline_text)
+
+        with st.spinner("Getting AI-corrected assessment..."):
+            user_profile = f"Age {age}, Glucose {glucose}, BMI {bmi}, BP {bp}"
+            ai_text = ai_correct(food_item, pred, prob, user_profile)
+        st.subheader("AI-Corrected Dietary Assessment")
+        st.write(ai_text)
+
+        pdf_path = generate_pdf(user_profile, food_item, baseline_text, ai_text)
+        with open(pdf_path, "rb") as f:
+            st.download_button("Download PDF Report", f, file_name="diet_report.pdf")
