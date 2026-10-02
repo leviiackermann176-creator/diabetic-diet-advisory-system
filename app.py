@@ -33,7 +33,7 @@ def baseline_predict(glucose, bmi, age, bp):
 # ---------- AI correction layer ----------
 def ai_correct(food_item, baseline_verdict, prob, user_profile):
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model_ai = genai.GenerativeModel("gemini-2.5-flash")
+    model_ai = genai.GenerativeModel("gemini-2.0-flash")
     prompt = f"""You are a nutritionist agent. A baseline ML model gave this raw verdict
 for a user's diabetes risk: {'HIGH RISK' if baseline_verdict==1 else 'LOW RISK'} (probability: {prob:.2f}).
 
