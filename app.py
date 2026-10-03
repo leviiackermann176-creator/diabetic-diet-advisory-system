@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 from fpdf import FPDF
 from google import genai
+import html
 
 
 # ============================================================
@@ -21,23 +22,24 @@ st.set_page_config(
 # CUSTOM CSS
 # ============================================================
 
-st.markdown("""
+st.markdown(
+    """
 <style>
 
 /* ============================================================
-   MAIN APP BACKGROUND
+   MAIN APP
    ============================================================ */
 
 .stApp {
     background:
         radial-gradient(
-            circle at 10% 10%,
-            rgba(16, 185, 129, 0.10),
+            circle at 5% 5%,
+            rgba(16, 185, 129, 0.12),
             transparent 25%
         ),
         radial-gradient(
-            circle at 90% 15%,
-            rgba(20, 184, 166, 0.08),
+            circle at 95% 10%,
+            rgba(20, 184, 166, 0.10),
             transparent 25%
         ),
         linear-gradient(
@@ -56,7 +58,7 @@ st.markdown("""
 
 
 /* ============================================================
-   MAIN HEADINGS
+   HEADINGS
    ============================================================ */
 
 h1 {
@@ -102,6 +104,7 @@ section[data-testid="stSidebar"] * {
 .sidebar-subtitle {
     color: #A7F3D0 !important;
     font-size: 13px;
+    line-height: 1.6;
 }
 
 .sidebar-section {
@@ -115,10 +118,11 @@ section[data-testid="stSidebar"] * {
 
 .sidebar-info {
     background: rgba(255, 255, 255, 0.09);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.13);
     border-radius: 12px;
-    padding: 12px;
+    padding: 13px;
     margin: 8px 0;
+    line-height: 1.6;
 }
 
 
@@ -207,7 +211,7 @@ div.stButton > button {
         linear-gradient(
             135deg,
             #047857 0%,
-            #059669 45%,
+            #059669 50%,
             #14B8A6 100%
         ) !important;
 
@@ -300,14 +304,12 @@ div[data-testid="stDownloadButton"] button:hover {
 
 
 /* ============================================================
-   AI NUTRITION INSIGHT
-   IMPORTANT:
-   NO FIXED HEIGHT
-   NO MAX HEIGHT
-   NO SCROLLING
+   AI NUTRITION CARD
    ============================================================ */
 
-.nutrition-insight {
+.nutrition-card {
+    width: 100%;
+
     background:
         linear-gradient(
             135deg,
@@ -316,70 +318,76 @@ div[data-testid="stDownloadButton"] button:hover {
             #0D9488 100%
         );
 
-    color: #FFFFFF !important;
+    color: #FFFFFF;
 
-    padding: 22px 24px;
+    padding: 24px;
 
-    border-radius: 16px;
+    border-radius: 18px;
 
-    margin-top: 10px;
-    margin-bottom: 20px;
+    margin-top: 12px;
+    margin-bottom: 24px;
 
     box-shadow:
-        0 8px 22px rgba(5, 150, 105, 0.20);
+        0 10px 28px rgba(5, 150, 105, 0.22);
 
-    width: 100%;
+    box-sizing: border-box;
 
-    height: auto !important;
-
-    min-height: 0 !important;
-
-    max-height: none !important;
-
-    overflow: visible !important;
-
-    white-space: normal !important;
-
-    word-wrap: break-word;
-
-    overflow-wrap: break-word;
+    overflow: visible;
 }
 
-.nutrition-insight-title {
+.nutrition-card-title {
     color: #FFFFFF !important;
 
-    font-size: 18px;
+    font-size: 20px;
 
-    font-weight: 750;
+    font-weight: 800;
 
-    margin-bottom: 12px;
+    margin-bottom: 16px;
+
+    line-height: 1.4;
 }
 
-.nutrition-insight-text {
+.nutrition-card-body {
     color: #FFFFFF !important;
 
     font-size: 16px;
 
-    line-height: 1.7;
+    line-height: 1.75;
 
-    white-space: normal !important;
+    white-space: normal;
 
-    overflow: visible !important;
-
-    height: auto !important;
-
-    min-height: 0 !important;
-
-    max-height: none !important;
+    overflow: visible;
 
     word-wrap: break-word;
 
     overflow-wrap: break-word;
 }
 
+.nutrition-card-body p {
+    color: #FFFFFF !important;
+
+    margin-top: 0;
+
+    margin-bottom: 13px;
+}
+
+.nutrition-card-recommendation {
+    margin-top: 18px;
+
+    padding: 13px 15px;
+
+    background: rgba(255, 255, 255, 0.13);
+
+    border-left: 4px solid #A7F3D0;
+
+    border-radius: 8px;
+
+    color: #FFFFFF !important;
+}
+
 
 /* ============================================================
-   RESULT ALERTS
+   INFORMATION BOX
    ============================================================ */
 
 div[data-testid="stAlert"] {
@@ -416,7 +424,7 @@ div[data-testid="stExpander"] {
 
 
 /* ============================================================
-   HIDE STREAMLIT DEFAULT BRANDING
+   HIDE STREAMLIT DEFAULT MENU
    ============================================================ */
 
 #MainMenu {
@@ -428,11 +436,13 @@ footer {
 }
 
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True
+)
 
 
 # ============================================================
-# LOAD ML MODEL
+# LOAD MACHINE LEARNING MODEL
 # ============================================================
 
 @st.cache_resource
@@ -497,7 +507,7 @@ def baseline_predict(glucose, bmi, age, bp):
 
 
 # ============================================================
-# AI CORRECTION
+# AI CORRECTION LAYER
 # ============================================================
 
 def ai_correct(
@@ -575,7 +585,8 @@ Do not diagnose, treat, cure, or prevent any medical condition.
                 contents=prompt
             )
 
-            return response.text
+            if response.text:
+                return response.text
 
         except Exception as error:
 
@@ -802,10 +813,6 @@ def generate_pdf(
     )
 
 
-    # --------------------------------------------------------
-    # SAVE
-    # --------------------------------------------------------
-
     path = "diet_report.pdf"
 
     pdf.output(path)
@@ -912,7 +919,7 @@ with st.sidebar:
 
 
 # ============================================================
-# MAIN TITLE
+# MAIN HEADER
 # ============================================================
 
 st.title(
@@ -1003,7 +1010,7 @@ st.write("")
 
 
 # ============================================================
-# ANALYZE BUTTON
+# ANALYZE FOOD
 # ============================================================
 
 if st.button(
@@ -1011,7 +1018,7 @@ if st.button(
 ):
 
     # --------------------------------------------------------
-    # EMPTY FOOD CHECK
+    # CHECK FOOD INPUT
     # --------------------------------------------------------
 
     if food_item.strip() == "":
@@ -1023,7 +1030,7 @@ if st.button(
     else:
 
         # ====================================================
-        # BASELINE ML MODEL
+        # BASELINE ML
         # ====================================================
 
         with st.spinner(
@@ -1116,31 +1123,49 @@ if st.button(
 
 
         # ====================================================
-        # AI RESULT
+        # AI-CORRECTED RESULT
         # ====================================================
 
         st.subheader(
             "🧠 AI-Corrected Dietary Assessment"
         )
 
+
+        # ----------------------------------------------------
         # IMPORTANT:
-        # This is NOT a Streamlit alert.
-        # It has no fixed height and no scrolling.
+        #
+        # html.escape() prevents AI-generated text from
+        # accidentally being interpreted as HTML.
+        #
+        # We also build the HTML WITHOUT indentation.
+        # This prevents Streamlit from treating it as a
+        # code block.
+        # ----------------------------------------------------
+
+        safe_ai_text = html.escape(
+            ai_text
+        )
+
+        safe_ai_text = safe_ai_text.replace(
+            "\n",
+            "<br>"
+        )
+
+
+        nutrition_card = (
+            '<div class="nutrition-card">'
+            '<div class="nutrition-card-title">'
+            '✨ Context-Aware Nutrition Insight'
+            '</div>'
+            '<div class="nutrition-card-body">'
+            + safe_ai_text +
+            '</div>'
+            '</div>'
+        )
+
 
         st.markdown(
-            f"""
-            <div class="nutrition-insight">
-
-                <div class="nutrition-insight-title">
-                    ✨ Context-Aware Nutrition Insight
-                </div>
-
-                <div class="nutrition-insight-text">
-                    {ai_text}
-                </div>
-
-            </div>
-            """,
+            nutrition_card,
             unsafe_allow_html=True
         )
 
@@ -1162,7 +1187,7 @@ if st.button(
                 the complete nutritional composition of a particular
                 meal.
 
-                The AI layer adds additional dietary context such as:
+                The AI layer adds dietary context such as:
 
                 🌾 **Carbohydrate quality**
 
@@ -1210,7 +1235,7 @@ if st.button(
 
 
 # ============================================================
-# DISCLAIMER
+# MEDICAL DISCLAIMER
 # ============================================================
 
 st.markdown("---")
@@ -1229,11 +1254,11 @@ st.caption(
 
 st.markdown(
     """
-    <div class="footer-text">
-        🩺 <b>Diabetic Diet Advisory</b>
-        &nbsp; • &nbsp;
-        Python + Streamlit + Machine Learning + Generative AI
-    </div>
-    """,
+<div class="footer-text">
+    🩺 <b>Diabetic Diet Advisory</b>
+    &nbsp; • &nbsp;
+    Python + Streamlit + Machine Learning + Generative AI
+</div>
+""",
     unsafe_allow_html=True
 )
