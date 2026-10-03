@@ -3,11 +3,16 @@ import pickle
 import numpy as np
 from fpdf import FPDF
 from google import genai
+import hashlib
+import hmac
+import sqlite3
+from datetime import datetime
 import html
+import os
 
 
 # ============================================================
-# PAGE CONFIGURATION
+# PAGE CONFIG
 # ============================================================
 
 st.set_page_config(
@@ -19,430 +24,67 @@ st.set_page_config(
 
 
 # ============================================================
-# CUSTOM CSS
+# DATABASE
 # ============================================================
 
-st.markdown(
-    """
-<style>
-
-/* ============================================================
-   MAIN APP
-   ============================================================ */
-
-.stApp {
-    background:
-        radial-gradient(
-            circle at 5% 5%,
-            rgba(16, 185, 129, 0.12),
-            transparent 25%
-        ),
-        radial-gradient(
-            circle at 95% 10%,
-            rgba(20, 184, 166, 0.10),
-            transparent 25%
-        ),
-        linear-gradient(
-            135deg,
-            #F0FDF9 0%,
-            #ECFDF5 45%,
-            #F0FDFA 100%
-        );
-}
-
-.block-container {
-    max-width: 1200px;
-    padding-top: 2rem;
-    padding-bottom: 3rem;
-}
-
-
-/* ============================================================
-   HEADINGS
-   ============================================================ */
-
-h1 {
-    color: #064E3B !important;
-    font-weight: 800 !important;
-    font-size: 42px !important;
-    letter-spacing: -1px;
-}
-
-h2 {
-    color: #065F46 !important;
-    font-weight: 750 !important;
-}
-
-h3 {
-    color: #047857 !important;
-    font-weight: 700 !important;
-}
-
-p {
-    color: #475569;
-}
-
-
-/* ============================================================
-   SIDEBAR
-   ============================================================ */
-
-section[data-testid="stSidebar"] {
-    background:
-        linear-gradient(
-            180deg,
-            #022C22 0%,
-            #064E3B 45%,
-            #047857 100%
-        );
-}
-
-section[data-testid="stSidebar"] * {
-    color: white !important;
-}
-
-.sidebar-subtitle {
-    color: #A7F3D0 !important;
-    font-size: 13px;
-    line-height: 1.6;
-}
-
-.sidebar-section {
-    color: #6EE7B7 !important;
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: 20px;
-}
-
-.sidebar-info {
-    background: rgba(255, 255, 255, 0.09);
-    border: 1px solid rgba(255, 255, 255, 0.13);
-    border-radius: 12px;
-    padding: 13px;
-    margin: 8px 0;
-    line-height: 1.6;
-}
-
-
-/* ============================================================
-   DIVIDERS
-   ============================================================ */
-
-hr {
-    border: none !important;
-    height: 1px !important;
-
-    background:
-        linear-gradient(
-            90deg,
-            transparent,
-            #86EFAC,
-            transparent
-        ) !important;
-}
-
-
-/* ============================================================
-   INPUT LABELS
-   ============================================================ */
-
-label {
-    color: #064E3B !important;
-    font-weight: 650 !important;
-}
-
-
-/* ============================================================
-   NUMBER INPUTS
-   ============================================================ */
-
-div[data-testid="stNumberInput"] input {
-    background: #FFFFFF !important;
-    color: #064E3B !important;
-
-    border: 1px solid #B7DED0 !important;
-    border-radius: 12px !important;
-
-    font-weight: 600 !important;
-}
-
-div[data-testid="stNumberInput"] input:focus {
-    border: 2px solid #10B981 !important;
-
-    box-shadow:
-        0 0 0 3px rgba(16, 185, 129, 0.12) !important;
-}
-
-
-/* ============================================================
-   TEXT INPUT
-   ============================================================ */
-
-div[data-testid="stTextInput"] input {
-    background: #FFFFFF !important;
-    color: #064E3B !important;
-
-    border: 1px solid #B7DED0 !important;
-    border-radius: 12px !important;
-
-    padding: 12px !important;
-
-    font-size: 16px !important;
-}
-
-div[data-testid="stTextInput"] input:focus {
-    border: 2px solid #10B981 !important;
-
-    box-shadow:
-        0 0 0 3px rgba(16, 185, 129, 0.12) !important;
-}
-
-
-/* ============================================================
-   ANALYZE BUTTON
-   ============================================================ */
-
-div.stButton > button {
-    width: 100%;
-
-    background:
-        linear-gradient(
-            135deg,
-            #047857 0%,
-            #059669 50%,
-            #14B8A6 100%
-        ) !important;
-
-    color: #FFFFFF !important;
-
-    border: none !important;
-
-    border-radius: 13px !important;
-
-    min-height: 52px;
-
-    font-size: 17px !important;
-
-    font-weight: 750 !important;
-
-    box-shadow:
-        0 8px 20px rgba(5, 150, 105, 0.22);
-
-    transition: all 0.25s ease;
-}
-
-div.stButton > button p {
-    color: #FFFFFF !important;
-}
-
-div.stButton > button span {
-    color: #FFFFFF !important;
-}
-
-div.stButton > button:hover {
-    transform: translateY(-2px);
-
-    box-shadow:
-        0 12px 28px rgba(5, 150, 105, 0.30);
-}
-
-
-/* ============================================================
-   DOWNLOAD PDF BUTTON
-   ============================================================ */
-
-div[data-testid="stDownloadButton"] button {
-    width: 100% !important;
-
-    background:
-        linear-gradient(
-            135deg,
-            #334155 0%,
-            #475569 100%
-        ) !important;
-
-    color: #FFFFFF !important;
-
-    border: none !important;
-
-    border-radius: 13px !important;
-
-    min-height: 52px !important;
-
-    font-size: 16px !important;
-
-    font-weight: 700 !important;
-
-    box-shadow:
-        0 7px 18px rgba(51, 65, 85, 0.20);
-
-    transition: all 0.25s ease;
-}
-
-div[data-testid="stDownloadButton"] button p {
-    color: #FFFFFF !important;
-}
-
-div[data-testid="stDownloadButton"] button span {
-    color: #FFFFFF !important;
-}
-
-div[data-testid="stDownloadButton"] button:hover {
-    background:
-        linear-gradient(
-            135deg,
-            #1E293B 0%,
-            #334155 100%
-        ) !important;
-
-    color: #FFFFFF !important;
-
-    transform: translateY(-2px);
-}
-
-
-/* ============================================================
-   AI NUTRITION CARD
-   ============================================================ */
-
-.nutrition-card {
-    width: 100%;
-
-    background:
-        linear-gradient(
-            135deg,
-            #047857 0%,
-            #059669 50%,
-            #0D9488 100%
-        );
-
-    color: #FFFFFF;
-
-    padding: 24px;
-
-    border-radius: 18px;
-
-    margin-top: 12px;
-    margin-bottom: 24px;
-
-    box-shadow:
-        0 10px 28px rgba(5, 150, 105, 0.22);
-
-    box-sizing: border-box;
-
-    overflow: visible;
-}
-
-.nutrition-card-title {
-    color: #FFFFFF !important;
-
-    font-size: 20px;
-
-    font-weight: 800;
-
-    margin-bottom: 16px;
-
-    line-height: 1.4;
-}
-
-.nutrition-card-body {
-    color: #FFFFFF !important;
-
-    font-size: 16px;
-
-    line-height: 1.75;
-
-    white-space: normal;
-
-    overflow: visible;
-
-    word-wrap: break-word;
-
-    overflow-wrap: break-word;
-}
-
-.nutrition-card-body p {
-    color: #FFFFFF !important;
-
-    margin-top: 0;
-
-    margin-bottom: 13px;
-}
-
-.nutrition-card-recommendation {
-    margin-top: 18px;
-
-    padding: 13px 15px;
-
-    background: rgba(255, 255, 255, 0.13);
-
-    border-left: 4px solid #A7F3D0;
-
-    border-radius: 8px;
-
-    color: #FFFFFF !important;
-}
-
-
-/* ============================================================
-   INFORMATION BOX
-   ============================================================ */
-
-div[data-testid="stAlert"] {
-    border-radius: 14px !important;
-}
-
-
-/* ============================================================
-   EXPANDER
-   ============================================================ */
-
-div[data-testid="stExpander"] {
-    border: 1px solid #CDE9DE !important;
-
-    border-radius: 14px !important;
-
-    background: rgba(255, 255, 255, 0.75) !important;
-}
-
-
-/* ============================================================
-   FOOTER
-   ============================================================ */
-
-.footer-text {
-    text-align: center;
-
-    color: #64748B;
-
-    font-size: 12px;
-
-    padding-top: 20px;
-}
-
-
-/* ============================================================
-   HIDE STREAMLIT DEFAULT MENU
-   ============================================================ */
-
-#MainMenu {
-    visibility: hidden;
-}
-
-footer {
-    visibility: hidden;
-}
-
-</style>
-""",
-    unsafe_allow_html=True
-)
+DB_FILE = "patient_history.db"
+
+
+def get_connection():
+    return sqlite3.connect(
+        DB_FILE,
+        check_same_thread=False
+    )
+
+
+def init_database():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # Patient profiles
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS patients (
+            username TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            age INTEGER,
+            diabetes_type TEXT,
+            glucose REAL,
+            bmi REAL,
+            blood_pressure REAL,
+            dietary_preference TEXT,
+            allergies TEXT,
+            activity_level TEXT,
+            created_at TEXT
+        )
+    """)
+
+    # Meal history
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS meal_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL,
+            food_item TEXT NOT NULL,
+            glucose REAL,
+            bmi REAL,
+            blood_pressure REAL,
+            baseline_verdict TEXT,
+            probability REAL,
+            ai_assessment TEXT,
+            created_at TEXT,
+            FOREIGN KEY(username) REFERENCES patients(username)
+        )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+init_database()
 
 
 # ============================================================
-# LOAD MACHINE LEARNING MODEL
+# MODEL LOADING
 # ============================================================
 
 @st.cache_resource
@@ -461,13 +103,225 @@ model, scaler = load_models()
 
 
 # ============================================================
+# PASSWORD HASHING
+# ============================================================
+
+def hash_password(password):
+
+    return hashlib.sha256(
+        password.encode("utf-8")
+    ).hexdigest()
+
+
+def authenticate_user(username, password):
+
+    try:
+
+        users = st.secrets["users"]
+
+    except Exception:
+
+        st.error(
+            "⚠️ Login configuration is missing. "
+            "Please configure users in Streamlit Secrets."
+        )
+
+        st.stop()
+
+    if username not in users:
+        return False
+
+    stored_hash = str(users[username])
+
+    entered_hash = hash_password(password)
+
+    return hmac.compare_digest(
+        entered_hash,
+        stored_hash
+    )
+
+
+# ============================================================
+# PATIENT DATABASE FUNCTIONS
+# ============================================================
+
+def get_patient(username):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            username,
+            name,
+            age,
+            diabetes_type,
+            glucose,
+            bmi,
+            blood_pressure,
+            dietary_preference,
+            allergies,
+            activity_level,
+            created_at
+        FROM patients
+        WHERE username = ?
+        """,
+        (username,)
+    )
+
+    result = cursor.fetchone()
+
+    conn.close()
+
+    return result
+
+
+def save_patient_profile(
+    username,
+    name,
+    age,
+    diabetes_type,
+    glucose,
+    bmi,
+    blood_pressure,
+    dietary_preference,
+    allergies,
+    activity_level
+):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    now = datetime.now().strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+    cursor.execute(
+        """
+        INSERT OR REPLACE INTO patients (
+            username,
+            name,
+            age,
+            diabetes_type,
+            glucose,
+            bmi,
+            blood_pressure,
+            dietary_preference,
+            allergies,
+            activity_level,
+            created_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            username,
+            name,
+            age,
+            diabetes_type,
+            glucose,
+            bmi,
+            blood_pressure,
+            dietary_preference,
+            allergies,
+            activity_level,
+            now
+        )
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def save_meal_history(
+    username,
+    food_item,
+    glucose,
+    bmi,
+    blood_pressure,
+    baseline_verdict,
+    probability,
+    ai_assessment
+):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    now = datetime.now().strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
+
+    cursor.execute(
+        """
+        INSERT INTO meal_history (
+            username,
+            food_item,
+            glucose,
+            bmi,
+            blood_pressure,
+            baseline_verdict,
+            probability,
+            ai_assessment,
+            created_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            username,
+            food_item,
+            glucose,
+            bmi,
+            blood_pressure,
+            baseline_verdict,
+            probability,
+            ai_assessment,
+            now
+        )
+    )
+
+    conn.commit()
+    conn.close()
+
+
+def get_meal_history(username):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            id,
+            food_item,
+            glucose,
+            bmi,
+            blood_pressure,
+            baseline_verdict,
+            probability,
+            ai_assessment,
+            created_at
+        FROM meal_history
+        WHERE username = ?
+        ORDER BY id DESC
+        """,
+        (username,)
+    )
+
+    results = cursor.fetchall()
+
+    conn.close()
+
+    return results
+
+
+# ============================================================
 # DIETARY GUIDELINES
 # ============================================================
 
 GUIDELINES = """
-Diabetic dietary guidelines (summary):
+Diabetic dietary guidelines:
 
-- Prefer low glycemic index (GI) foods such as millets,
+- Prefer low glycemic index foods such as millets,
   whole grains and legumes.
 
 - Bajra, jowar and ragi are fiber-rich carbohydrate sources.
@@ -484,6 +338,9 @@ Diabetic dietary guidelines (summary):
 
 - Fiber-rich vegetables and protein can help slow
   carbohydrate absorption when eaten with carbohydrates.
+
+- Consider the complete meal rather than judging one
+  ingredient in isolation.
 """
 
 
@@ -491,23 +348,39 @@ Diabetic dietary guidelines (summary):
 # BASELINE ML PREDICTION
 # ============================================================
 
-def baseline_predict(glucose, bmi, age, bp):
+def baseline_predict(
+    glucose,
+    bmi,
+    age,
+    bp
+):
 
     features = np.array([
-        [1, glucose, bp, 20, 80, bmi, 0.5, age]
+        [
+            1,
+            glucose,
+            bp,
+            20,
+            80,
+            bmi,
+            0.5,
+            age
+        ]
     ])
 
     scaled = scaler.transform(features)
 
     pred = model.predict(scaled)[0]
 
-    prob = model.predict_proba(scaled)[0][1]
+    prob = model.predict_proba(
+        scaled
+    )[0][1]
 
     return pred, prob
 
 
 # ============================================================
-# AI CORRECTION LAYER
+# GEMINI AI CORRECTION
 # ============================================================
 
 def ai_correct(
@@ -526,15 +399,15 @@ You are a nutritionist agent assisting an educational
 diabetic dietary advisory application.
 
 Baseline ML result:
-{'HIGH RISK' if baseline_verdict == 1 else 'LOW RISK'}
+{'HIGHER-RISK MODEL SIGNAL' if baseline_verdict == 1 else 'LOWER-RISK MODEL SIGNAL'}
 
 Model probability:
 {prob:.2f}
 
-User profile:
+Patient profile:
 {user_profile}
 
-Food item:
+Food or meal:
 {food_item}
 
 Dietary guidelines:
@@ -543,7 +416,7 @@ Dietary guidelines:
 Task:
 
 Give a concise, context-aware dietary assessment of this
-food item for this user.
+food or meal.
 
 Consider:
 
@@ -554,17 +427,20 @@ Consider:
 - protein
 - added sugar
 - fat quantity
+- dietary preference
+- allergies
 - overall meal composition
 
-Briefly explain why the baseline ML result should not
+Explain briefly why the baseline ML result should not
 automatically be interpreted as a judgment about the
-individual food item.
+individual food.
 
 Keep the response below 150 words.
 
 Finish with ONE practical recommendation.
 
-Do not diagnose, treat, cure, or prevent any medical condition.
+Do not diagnose, treat, cure, or prevent a medical condition.
+Do not tell the patient to change medication.
 """
 
     fallback_models = [
@@ -599,7 +475,7 @@ Do not diagnose, treat, cure, or prevent any medical condition.
 
 
 # ============================================================
-# PDF TEXT CLEANING
+# PDF
 # ============================================================
 
 def clean_text(text):
@@ -611,12 +487,8 @@ def clean_text(text):
     )
 
 
-# ============================================================
-# PDF GENERATION
-# ============================================================
-
 def generate_pdf(
-    user_profile,
+    patient,
     food_item,
     baseline_text,
     ai_text
@@ -625,7 +497,6 @@ def generate_pdf(
     pdf = FPDF()
 
     pdf.add_page()
-
 
     # --------------------------------------------------------
     # TITLE
@@ -653,56 +524,8 @@ def generate_pdf(
 
     pdf.ln(8)
 
-
     # --------------------------------------------------------
-    # USER INFORMATION
-    # --------------------------------------------------------
-
-    pdf.set_text_color(
-        30,
-        41,
-        59
-    )
-
-    pdf.set_font(
-        "Arial",
-        style="B",
-        size=11
-    )
-
-    pdf.cell(
-        0,
-        8,
-        "User Information",
-        ln=True
-    )
-
-    pdf.set_font(
-        "Arial",
-        size=11
-    )
-
-    pdf.multi_cell(
-        0,
-        8,
-        clean_text(
-            f"User Profile: {user_profile}"
-        )
-    )
-
-    pdf.multi_cell(
-        0,
-        8,
-        clean_text(
-            f"Food Item: {food_item}"
-        )
-    )
-
-    pdf.ln(5)
-
-
-    # --------------------------------------------------------
-    # BASELINE MODEL
+    # PATIENT INFORMATION
     # --------------------------------------------------------
 
     pdf.set_text_color(
@@ -714,13 +537,13 @@ def generate_pdf(
     pdf.set_font(
         "Arial",
         style="B",
-        size=11
+        size=12
     )
 
     pdf.cell(
         0,
         8,
-        "Baseline ML Model Verdict",
+        "Patient Information",
         ln=True
     )
 
@@ -732,20 +555,115 @@ def generate_pdf(
 
     pdf.set_font(
         "Arial",
-        size=11
+        size=10
+    )
+
+    profile_text = (
+        f"Name: {patient['name']}\n"
+        f"Age: {patient['age']}\n"
+        f"Diabetes Type: {patient['diabetes_type']}\n"
+        f"Glucose: {patient['glucose']} mg/dL\n"
+        f"BMI: {patient['bmi']}\n"
+        f"Blood Pressure: {patient['blood_pressure']}\n"
+        f"Dietary Preference: {patient['dietary_preference']}\n"
+        f"Allergies: {patient['allergies']}\n"
+        f"Activity Level: {patient['activity_level']}"
     )
 
     pdf.multi_cell(
         0,
+        7,
+        clean_text(profile_text)
+    )
+
+    pdf.ln(6)
+
+    # --------------------------------------------------------
+    # FOOD
+    # --------------------------------------------------------
+
+    pdf.set_text_color(
+        6,
+        95,
+        70
+    )
+
+    pdf.set_font(
+        "Arial",
+        style="B",
+        size=12
+    )
+
+    pdf.cell(
+        0,
         8,
+        "Food / Meal",
+        ln=True
+    )
+
+    pdf.set_text_color(
+        30,
+        41,
+        59
+    )
+
+    pdf.set_font(
+        "Arial",
+        size=10
+    )
+
+    pdf.multi_cell(
+        0,
+        7,
+        clean_text(food_item)
+    )
+
+    pdf.ln(6)
+
+    # --------------------------------------------------------
+    # BASELINE
+    # --------------------------------------------------------
+
+    pdf.set_text_color(
+        6,
+        95,
+        70
+    )
+
+    pdf.set_font(
+        "Arial",
+        style="B",
+        size=12
+    )
+
+    pdf.cell(
+        0,
+        8,
+        "Baseline ML Result",
+        ln=True
+    )
+
+    pdf.set_text_color(
+        30,
+        41,
+        59
+    )
+
+    pdf.set_font(
+        "Arial",
+        size=10
+    )
+
+    pdf.multi_cell(
+        0,
+        7,
         clean_text(baseline_text)
     )
 
-    pdf.ln(5)
-
+    pdf.ln(6)
 
     # --------------------------------------------------------
-    # AI ASSESSMENT
+    # AI
     # --------------------------------------------------------
 
     pdf.set_text_color(
@@ -757,7 +675,7 @@ def generate_pdf(
     pdf.set_font(
         "Arial",
         style="B",
-        size=11
+        size=12
     )
 
     pdf.cell(
@@ -775,17 +693,16 @@ def generate_pdf(
 
     pdf.set_font(
         "Arial",
-        size=11
+        size=10
     )
 
     pdf.multi_cell(
         0,
-        8,
+        7,
         clean_text(ai_text)
     )
 
-    pdf.ln(12)
-
+    pdf.ln(10)
 
     # --------------------------------------------------------
     # DISCLAIMER
@@ -799,25 +716,751 @@ def generate_pdf(
 
     pdf.set_font(
         "Arial",
-        size=9
+        size=8
     )
 
     pdf.multi_cell(
         0,
-        6,
+        5,
         clean_text(
             "Disclaimer: This report is for educational purposes "
-            "only and should not replace advice from a qualified "
-            "healthcare professional."
+            "only and does not constitute medical advice, diagnosis "
+            "or treatment. Consult a qualified healthcare "
+            "professional for medical guidance."
         )
     )
-
 
     path = "diet_report.pdf"
 
     pdf.output(path)
 
     return path
+
+
+# ============================================================
+# GLOBAL CSS
+# ============================================================
+
+st.markdown(
+    """
+<style>
+
+/* ==========================================================
+   APP BACKGROUND
+   ========================================================== */
+
+.stApp {
+    background:
+        radial-gradient(
+            circle at 5% 5%,
+            rgba(16,185,129,0.12),
+            transparent 25%
+        ),
+        radial-gradient(
+            circle at 95% 10%,
+            rgba(20,184,166,0.10),
+            transparent 25%
+        ),
+        linear-gradient(
+            135deg,
+            #F0FDF9 0%,
+            #ECFDF5 45%,
+            #F0FDFA 100%
+        );
+}
+
+.block-container {
+    max-width: 1200px;
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+}
+
+
+/* ==========================================================
+   HEADINGS
+   ========================================================== */
+
+h1 {
+    color: #064E3B !important;
+    font-weight: 800 !important;
+    font-size: 42px !important;
+}
+
+h2 {
+    color: #065F46 !important;
+    font-weight: 750 !important;
+}
+
+h3 {
+    color: #047857 !important;
+}
+
+
+/* ==========================================================
+   SIDEBAR
+   ========================================================== */
+
+section[data-testid="stSidebar"] {
+    background:
+        linear-gradient(
+            180deg,
+            #022C22 0%,
+            #064E3B 45%,
+            #047857 100%
+        );
+}
+
+section[data-testid="stSidebar"] * {
+    color: white !important;
+}
+
+.sidebar-subtitle {
+    color: #A7F3D0 !important;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.sidebar-section {
+    color: #6EE7B7 !important;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 20px;
+}
+
+.sidebar-info {
+    background: rgba(255,255,255,0.09);
+    border: 1px solid rgba(255,255,255,0.13);
+    border-radius: 12px;
+    padding: 13px;
+    margin: 8px 0;
+    line-height: 1.6;
+}
+
+
+/* ==========================================================
+   INPUTS
+   ========================================================== */
+
+div[data-testid="stNumberInput"] input,
+div[data-testid="stTextInput"] input {
+    background: #FFFFFF !important;
+    color: #064E3B !important;
+
+    border: 1px solid #B7DED0 !important;
+
+    border-radius: 12px !important;
+}
+
+div[data-testid="stNumberInput"] input:focus,
+div[data-testid="stTextInput"] input:focus {
+    border: 2px solid #10B981 !important;
+
+    box-shadow:
+        0 0 0 3px rgba(16,185,129,0.12) !important;
+}
+
+label {
+    color: #064E3B !important;
+    font-weight: 650 !important;
+}
+
+
+/* ==========================================================
+   BUTTON
+   ========================================================== */
+
+div.stButton > button {
+    width: 100%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #047857,
+            #059669,
+            #14B8A6
+        ) !important;
+
+    color: white !important;
+
+    border: none !important;
+
+    border-radius: 13px !important;
+
+    min-height: 50px;
+
+    font-size: 16px !important;
+
+    font-weight: 750 !important;
+
+    box-shadow:
+        0 8px 20px rgba(5,150,105,0.22);
+
+    transition: 0.25s ease;
+}
+
+div.stButton > button:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 12px 28px rgba(5,150,105,0.30);
+}
+
+
+/* ==========================================================
+   FORM SUBMIT
+   ========================================================== */
+
+button[kind="primaryFormSubmit"] {
+    background:
+        linear-gradient(
+            135deg,
+            #047857,
+            #059669,
+            #14B8A6
+        ) !important;
+
+    color: white !important;
+
+    border: none !important;
+
+    border-radius: 13px !important;
+
+    min-height: 50px !important;
+
+    font-weight: 750 !important;
+}
+
+
+/* ==========================================================
+   DOWNLOAD
+   ========================================================== */
+
+div[data-testid="stDownloadButton"] button {
+    width: 100% !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            #334155,
+            #475569
+        ) !important;
+
+    color: white !important;
+
+    border: none !important;
+
+    border-radius: 13px !important;
+
+    min-height: 50px !important;
+
+    font-weight: 700 !important;
+}
+
+
+/* ==========================================================
+   NUTRITION CARD
+   ========================================================== */
+
+.nutrition-card {
+    width: 100%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #047857 0%,
+            #059669 50%,
+            #0D9488 100%
+        );
+
+    color: white;
+
+    padding: 25px;
+
+    border-radius: 18px;
+
+    margin-top: 12px;
+    margin-bottom: 24px;
+
+    box-shadow:
+        0 10px 28px rgba(5,150,105,0.22);
+
+    box-sizing: border-box;
+}
+
+.nutrition-card-title {
+    color: white !important;
+
+    font-size: 20px;
+
+    font-weight: 800;
+
+    margin-bottom: 15px;
+}
+
+.nutrition-card-body {
+    color: white !important;
+
+    font-size: 16px;
+
+    line-height: 1.75;
+
+    word-wrap: break-word;
+
+    overflow-wrap: break-word;
+}
+
+
+/* ==========================================================
+   HISTORY CARDS
+   ========================================================== */
+
+.history-card {
+    background: white;
+
+    border: 1px solid #D1FAE5;
+
+    border-radius: 15px;
+
+    padding: 18px;
+
+    margin-bottom: 12px;
+
+    box-shadow:
+        0 5px 15px rgba(6,78,59,0.06);
+}
+
+.history-food {
+    color: #047857;
+
+    font-size: 18px;
+
+    font-weight: 750;
+
+    margin-bottom: 8px;
+}
+
+.history-date {
+    color: #64748B;
+
+    font-size: 12px;
+
+    margin-bottom: 10px;
+}
+
+.history-result {
+    color: #334155;
+
+    font-size: 14px;
+
+    line-height: 1.6;
+}
+
+
+/* ==========================================================
+   LOGIN CARD
+   ========================================================== */
+
+.login-card {
+    max-width: 500px;
+
+    margin: 80px auto 25px auto;
+
+    padding: 42px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #FFFFFF,
+            #F0FDFA
+        );
+
+    border-radius: 26px;
+
+    border: 1px solid #D1FAE5;
+
+    box-shadow:
+        0 25px 60px rgba(6,78,59,0.16);
+
+    text-align: center;
+}
+
+.login-icon {
+    font-size: 58px;
+
+    margin-bottom: 8px;
+}
+
+.login-title {
+    color: #064E3B;
+
+    font-size: 30px;
+
+    font-weight: 800;
+}
+
+.login-subtitle {
+    color: #64748B;
+
+    font-size: 15px;
+
+    line-height: 1.6;
+
+    margin-top: 8px;
+}
+
+
+/* ==========================================================
+   PROFILE CARD
+   ========================================================== */
+
+.profile-card {
+    background:
+        linear-gradient(
+            135deg,
+            #064E3B,
+            #047857,
+            #0D9488
+        );
+
+    color: white;
+
+    padding: 28px;
+
+    border-radius: 20px;
+
+    margin-bottom: 25px;
+
+    box-shadow:
+        0 12px 30px rgba(5,150,105,0.20);
+}
+
+.profile-card h2 {
+    color: white !important;
+}
+
+.profile-card p {
+    color: #D1FAE5 !important;
+}
+
+
+/* ==========================================================
+   FOOTER
+   ========================================================== */
+
+.footer-text {
+    text-align: center;
+
+    color: #64748B;
+
+    font-size: 12px;
+
+    padding-top: 20px;
+}
+
+#MainMenu {
+    visibility: hidden;
+}
+
+footer {
+    visibility: hidden;
+}
+
+</style>
+""",
+    unsafe_allow_html=True
+)
+
+
+# ============================================================
+# SESSION STATE
+# ============================================================
+
+if "authenticated" not in st.session_state:
+    st.session_state.authenticated = False
+
+if "username" not in st.session_state:
+    st.session_state.username = None
+
+
+# ============================================================
+# LOGIN PAGE
+# ============================================================
+
+if not st.session_state.authenticated:
+
+    st.markdown(
+        """
+        <div class="login-card">
+
+            <div class="login-icon">
+                🩺
+            </div>
+
+            <div class="login-title">
+                Diabetic Diet Advisory
+            </div>
+
+            <div class="login-subtitle">
+                AI + Machine Learning Nutrition Assistant
+                <br>
+                Sign in to access your personalized
+                dietary advisory dashboard.
+            </div>
+
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    with st.form("login_form"):
+
+        username = st.text_input(
+            "👤 Username",
+            placeholder="Enter your username"
+        )
+
+        password = st.text_input(
+            "🔒 Password",
+            type="password",
+            placeholder="Enter your password"
+        )
+
+        login_button = st.form_submit_button(
+            "🔐 Sign In",
+            use_container_width=True
+        )
+
+        if login_button:
+
+            if not username or not password:
+
+                st.warning(
+                    "⚠️ Please enter both username and password."
+                )
+
+            elif authenticate_user(
+                username,
+                password
+            ):
+
+                st.session_state.authenticated = True
+
+                st.session_state.username = username
+
+                st.rerun()
+
+            else:
+
+                st.error(
+                    "❌ Incorrect username or password."
+                )
+
+    st.markdown(
+        """
+        <p style="
+            text-align:center;
+            color:#047857;
+            font-size:13px;
+        ">
+        🔐 Secure application access
+        </p>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.stop()
+
+
+# ============================================================
+# CURRENT USER
+# ============================================================
+
+current_username = st.session_state.username
+
+patient_data = get_patient(
+    current_username
+)
+
+
+# ============================================================
+# PATIENT ONBOARDING
+# ============================================================
+
+if patient_data is None:
+
+    st.markdown(
+        """
+        <div class="profile-card">
+
+        <h2>👋 Welcome!</h2>
+
+        <p>
+        Before entering your dashboard, let's collect a few
+        details so that the dietary assessment can provide
+        more relevant context.
+        </p>
+
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.subheader(
+        "📝 Patient Profile"
+    )
+
+    st.info(
+        "Please provide the information below. "
+        "These details are used to personalize the dietary "
+        "assessment."
+    )
+
+    with st.form("patient_profile_form"):
+
+        st.markdown(
+            "### 👤 Personal Information"
+        )
+
+        name = st.text_input(
+            "Full Name",
+            placeholder="Enter your name"
+        )
+
+        age = st.number_input(
+            "Age",
+            min_value=1,
+            max_value=120,
+            value=30
+        )
+
+        diabetes_type = st.selectbox(
+            "Diabetes status",
+            [
+                "Not diagnosed / Prefer not to say",
+                "Type 1 diabetes",
+                "Type 2 diabetes",
+                "Prediabetes",
+                "Gestational diabetes",
+                "Other"
+            ]
+        )
+
+        st.markdown(
+            "### 🩸 Current Health Measurements"
+        )
+
+        glucose = st.number_input(
+            "Current glucose level (mg/dL)",
+            min_value=40.0,
+            max_value=500.0,
+            value=140.0,
+            step=1.0
+        )
+
+        bmi = st.number_input(
+            "BMI",
+            min_value=10.0,
+            max_value=70.0,
+            value=25.0,
+            step=0.1
+        )
+
+        blood_pressure = st.number_input(
+            "Systolic blood pressure (mmHg)",
+            min_value=60.0,
+            max_value=250.0,
+            value=120.0,
+            step=1.0
+        )
+
+        st.markdown(
+            "### 🥗 Dietary Information"
+        )
+
+        dietary_preference = st.selectbox(
+            "Dietary preference",
+            [
+                "No specific preference",
+                "Vegetarian",
+                "Vegan",
+                "Eggetarian",
+                "Non-vegetarian"
+            ]
+        )
+
+        allergies = st.text_input(
+            "Food allergies / intolerances",
+            placeholder="e.g. peanuts, lactose, none"
+        )
+
+        activity_level = st.selectbox(
+            "Typical activity level",
+            [
+                "Mostly sedentary",
+                "Lightly active",
+                "Moderately active",
+                "Very active"
+            ]
+        )
+
+        st.markdown("")
+
+        submit_profile = st.form_submit_button(
+            "✅ Save Profile & Continue",
+            use_container_width=True
+        )
+
+        if submit_profile:
+
+            if not name.strip():
+
+                st.error(
+                    "Please enter your name."
+                )
+
+            else:
+
+                save_patient_profile(
+                    current_username,
+                    name.strip(),
+                    age,
+                    diabetes_type,
+                    glucose,
+                    bmi,
+                    blood_pressure,
+                    dietary_preference,
+                    allergies.strip() or "None",
+                    activity_level
+                )
+
+                st.success(
+                    "✅ Profile saved successfully!"
+                )
+
+                st.rerun()
+
+    st.stop()
+
+
+# ============================================================
+# CONVERT DATABASE DATA TO DICTIONARY
+# ============================================================
+
+patient = {
+    "username": patient_data[0],
+    "name": patient_data[1],
+    "age": patient_data[2],
+    "diabetes_type": patient_data[3],
+    "glucose": patient_data[4],
+    "bmi": patient_data[5],
+    "blood_pressure": patient_data[6],
+    "dietary_preference": patient_data[7],
+    "allergies": patient_data[8],
+    "activity_level": patient_data[9],
+    "created_at": patient_data[10]
+}
 
 
 # ============================================================
@@ -839,10 +1482,28 @@ with st.sidebar:
 
     st.divider()
 
+    st.markdown(
+        f"""
+        <div class="sidebar-info">
+        👤 <b>Logged in as</b><br>
+        {html.escape(patient["name"])}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    # --------------------------------------------------------
-    # HOW IT WORKS
-    # --------------------------------------------------------
+    if st.button(
+        "🚪 Logout",
+        use_container_width=True
+    ):
+
+        st.session_state.authenticated = False
+
+        st.session_state.username = None
+
+        st.rerun()
+
+    st.divider()
 
     st.markdown(
         '<p class="sidebar-section">HOW IT WORKS</p>',
@@ -870,42 +1531,10 @@ with st.sidebar:
         📊 <b>Step 4</b><br>
         Receive a personalized assessment.
         </div>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.divider()
-
-
-    # --------------------------------------------------------
-    # DIETARY FOCUS
-    # --------------------------------------------------------
-
-    st.markdown(
-        '<p class="sidebar-section">DIETARY FOCUS</p>',
-        unsafe_allow_html=True
-    )
-
-    st.markdown(
-        """
-        <div class="sidebar-info">
-        🌾 Whole grains & millets
-        </div>
 
         <div class="sidebar-info">
-        🫘 Fiber-rich foods
-        </div>
-
-        <div class="sidebar-info">
-        🥗 Portion awareness
-        </div>
-
-        <div class="sidebar-info">
-        🍬 Limited refined sugar
-        </div>
-
-        <div class="sidebar-info">
-        🥚 Balanced protein
+        🗂️ <b>Step 5</b><br>
+        Your meal history is saved.
         </div>
         """,
         unsafe_allow_html=True
@@ -913,338 +1542,397 @@ with st.sidebar:
 
     st.divider()
 
-    st.caption(
-        "⚠️ Educational project — not a medical diagnostic system."
+    st.markdown(
+        '<p class="sidebar-section">YOUR PROFILE</p>',
+        unsafe_allow_html=True
+    )
+
+    st.markdown(
+        f"""
+        <div class="sidebar-info">
+        🎂 Age: {patient["age"]}<br>
+        🩸 Glucose: {patient["glucose"]} mg/dL<br>
+        ⚖️ BMI: {patient["bmi"]}<br>
+        ❤️ BP: {patient["blood_pressure"]} mmHg
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 
 # ============================================================
-# MAIN HEADER
+# DASHBOARD HEADER
 # ============================================================
 
-st.title(
-    "🩺 Diabetic Diet Advisory"
-)
+st.markdown(
+    f"""
+    <div class="profile-card">
 
-st.write(
-    "Enter your health details and a food item to receive "
-    "an AI-assisted, context-aware dietary assessment."
+        <h2>
+        👋 Hello, {html.escape(patient["name"])}!
+        </h2>
+
+        <p>
+        Welcome to your personalized diabetic diet dashboard.
+        </p>
+
+    </div>
+    """,
+    unsafe_allow_html=True
 )
 
 
 # ============================================================
-# HEALTH INFORMATION
+# DASHBOARD TABS
 # ============================================================
 
-st.subheader(
-    "👤 Your Health Information"
+dashboard_tab, history_tab, profile_tab = st.tabs(
+    [
+        "🍽️ Analyze Meal",
+        "🗂️ Meal History",
+        "👤 My Profile"
+    ]
 )
 
-col1, col2, col3, col4 = st.columns(4)
 
+# ============================================================
+# ANALYZE MEAL TAB
+# ============================================================
 
-with col1:
+with dashboard_tab:
 
-    age = st.number_input(
-        "🎂 Age",
-        min_value=18,
-        max_value=90,
-        value=45
+    st.subheader(
+        "🍽️ Analyze Your Food"
     )
 
-
-with col2:
-
-    glucose = st.number_input(
-        "🩸 Glucose (mg/dL)",
-        min_value=70,
-        max_value=300,
-        value=140
+    st.write(
+        "Enter the food or complete meal you want to evaluate."
     )
 
-
-with col3:
-
-    bmi = st.number_input(
-        "⚖️ BMI",
-        min_value=15.0,
-        max_value=50.0,
-        value=25.0,
-        step=0.1
+    st.info(
+        "💡 Tip: Enter the complete meal when possible. "
+        "For example: **2 bajra rotis with dal, vegetables "
+        "and 1 tsp ghee**."
     )
 
-
-with col4:
-
-    bp = st.number_input(
-        "❤️ Blood Pressure",
-        min_value=60,
-        max_value=140,
-        value=80
+    food_item = st.text_input(
+        "🥗 Food item / meal",
+        placeholder="e.g. Curd rice with vegetables"
     )
 
+    st.write("")
 
-st.markdown("---")
+    analyze_button = st.button(
+        "🔍 Analyze Food",
+        use_container_width=True
+    )
 
+    if analyze_button:
 
-# ============================================================
-# FOOD ANALYSIS
-# ============================================================
+        if not food_item.strip():
 
-st.subheader(
-    "🍽️ Food Analysis"
-)
-
-st.info(
-    "💡 Tip: Enter the complete meal when possible. "
-    "For example: **Bajra roti with 1 tsp ghee and 5g jaggery**."
-)
-
-food_item = st.text_input(
-    "🥗 Food item eaten",
-    placeholder="e.g. Bajra roti with ghee and jaggery"
-)
-
-
-st.write("")
-
-
-# ============================================================
-# ANALYZE FOOD
-# ============================================================
-
-if st.button(
-    "🔍 Analyze Food"
-):
-
-    # --------------------------------------------------------
-    # CHECK FOOD INPUT
-    # --------------------------------------------------------
-
-    if food_item.strip() == "":
-
-        st.warning(
-            "🥗 Please enter a food item before analyzing."
-        )
-
-    else:
-
-        # ====================================================
-        # BASELINE ML
-        # ====================================================
-
-        with st.spinner(
-            "🤖 Running baseline machine-learning model..."
-        ):
-
-            pred, prob = baseline_predict(
-                glucose,
-                bmi,
-                age,
-                bp
-            )
-
-            baseline_text = (
-                f"{'Higher-risk model signal' if pred == 1 else 'Lower-risk model signal'} "
-                f"(model probability: {prob:.0%})"
-            )
-
-
-        # ====================================================
-        # BASELINE RESULT
-        # ====================================================
-
-        st.subheader(
-            "📊 Baseline ML Model Verdict"
-        )
-
-        if pred == 1:
-
-            st.error(
-                f"""
-                ⚠️ **Higher-risk model signal**
-
-                Model probability for class 1:
-                **{prob:.0%}**
-                """
+            st.warning(
+                "🥗 Please enter a food item or meal."
             )
 
         else:
 
-            st.success(
-                f"""
-                ✅ **Lower-risk model signal**
+            # ------------------------------------------------
+            # BASELINE ML
+            # ------------------------------------------------
 
-                Model probability for class 1:
-                **{prob:.0%}**
-                """
+            with st.spinner(
+                "🤖 Running machine-learning model..."
+            ):
+
+                pred, prob = baseline_predict(
+                    patient["glucose"],
+                    patient["bmi"],
+                    patient["age"],
+                    patient["blood_pressure"]
+                )
+
+                baseline_text = (
+                    f"{'Higher-risk model signal' if pred == 1 else 'Lower-risk model signal'} "
+                    f"(model probability: {prob:.0%})"
+                )
+
+
+            st.subheader(
+                "📊 Baseline ML Model"
+            )
+
+            if pred == 1:
+
+                st.warning(
+                    f"⚠️ **Higher-risk model signal**\n\n"
+                    f"Model probability: **{prob:.0%}**"
+                )
+
+            else:
+
+                st.success(
+                    f"✅ **Lower-risk model signal**\n\n"
+                    f"Model probability: **{prob:.0%}**"
+                )
+
+
+            # ------------------------------------------------
+            # FOOD
+            # ------------------------------------------------
+
+            st.subheader(
+                "🍴 Food Selected"
+            )
+
+            st.info(
+                food_item
             )
 
 
-        # ====================================================
-        # FOOD SELECTED
-        # ====================================================
+            # ------------------------------------------------
+            # AI PROFILE
+            # ------------------------------------------------
 
-        st.subheader(
-            "🍴 Food Selected"
-        )
-
-        st.info(
-            f"**{food_item}**"
-        )
-
-
-        # ====================================================
-        # USER PROFILE
-        # ====================================================
-
-        user_profile = (
-            f"Age: {age}, "
-            f"Glucose: {glucose} mg/dL, "
-            f"BMI: {bmi}, "
-            f"Blood Pressure: {bp}"
-        )
+            user_profile = (
+                f"Name: {patient['name']}, "
+                f"Age: {patient['age']}, "
+                f"Diabetes status: {patient['diabetes_type']}, "
+                f"Glucose: {patient['glucose']} mg/dL, "
+                f"BMI: {patient['bmi']}, "
+                f"Systolic BP: {patient['blood_pressure']} mmHg, "
+                f"Diet: {patient['dietary_preference']}, "
+                f"Allergies: {patient['allergies']}, "
+                f"Activity: {patient['activity_level']}"
+            )
 
 
-        # ====================================================
-        # AI ANALYSIS
-        # ====================================================
+            # ------------------------------------------------
+            # GEMINI
+            # ------------------------------------------------
 
-        with st.spinner(
-            "🧠 AI is evaluating the food using dietary guidelines..."
-        ):
+            with st.spinner(
+                "🧠 AI is generating a context-aware nutrition insight..."
+            ):
 
-            ai_text = ai_correct(
-                food_item,
-                pred,
+                ai_text = ai_correct(
+                    food_item,
+                    pred,
+                    prob,
+                    user_profile
+                )
+
+
+            # ------------------------------------------------
+            # AI RESULT
+            # ------------------------------------------------
+
+            st.subheader(
+                "🧠 AI-Corrected Dietary Assessment"
+            )
+
+            safe_ai_text = html.escape(
+                ai_text
+            ).replace(
+                "\n",
+                "<br>"
+            )
+
+            nutrition_card = (
+                '<div class="nutrition-card">'
+                '<div class="nutrition-card-title">'
+                '✨ Context-Aware Nutrition Insight'
+                '</div>'
+                '<div class="nutrition-card-body">'
+                + safe_ai_text +
+                '</div>'
+                '</div>'
+            )
+
+            st.markdown(
+                nutrition_card,
+                unsafe_allow_html=True
+            )
+
+
+            # ------------------------------------------------
+            # SAVE HISTORY
+            # ------------------------------------------------
+
+            save_meal_history(
+                current_username,
+                food_item.strip(),
+                patient["glucose"],
+                patient["bmi"],
+                patient["blood_pressure"],
+                baseline_text,
                 prob,
-                user_profile
+                ai_text
+            )
+
+            st.success(
+                "🗂️ This meal has been saved to your personal history."
             )
 
 
-        # ====================================================
-        # AI-CORRECTED RESULT
-        # ====================================================
+            # ------------------------------------------------
+            # PDF
+            # ------------------------------------------------
 
-        st.subheader(
-            "🧠 AI-Corrected Dietary Assessment"
-        )
-
-
-        # ----------------------------------------------------
-        # IMPORTANT:
-        #
-        # html.escape() prevents AI-generated text from
-        # accidentally being interpreted as HTML.
-        #
-        # We also build the HTML WITHOUT indentation.
-        # This prevents Streamlit from treating it as a
-        # code block.
-        # ----------------------------------------------------
-
-        safe_ai_text = html.escape(
-            ai_text
-        )
-
-        safe_ai_text = safe_ai_text.replace(
-            "\n",
-            "<br>"
-        )
-
-
-        nutrition_card = (
-            '<div class="nutrition-card">'
-            '<div class="nutrition-card-title">'
-            '✨ Context-Aware Nutrition Insight'
-            '</div>'
-            '<div class="nutrition-card-body">'
-            + safe_ai_text +
-            '</div>'
-            '</div>'
-        )
-
-
-        st.markdown(
-            nutrition_card,
-            unsafe_allow_html=True
-        )
-
-
-        # ====================================================
-        # WHY AI CORRECTION?
-        # ====================================================
-
-        with st.expander(
-            "💡 Why does the AI correction layer matter?"
-        ):
-
-            st.write(
-                """
-                The baseline machine-learning model evaluates
-                patterns from the health measurements provided.
-
-                However, those measurements alone do not describe
-                the complete nutritional composition of a particular
-                meal.
-
-                The AI layer adds dietary context such as:
-
-                🌾 **Carbohydrate quality**
-
-                🥗 **Portion size**
-
-                🫘 **Fiber content**
-
-                🥚 **Protein**
-
-                🍬 **Added sugar**
-
-                🧈 **Fat quantity**
-
-                🍽️ **Overall meal composition**
-                """
+            st.subheader(
+                "📄 Personalized Report"
             )
 
-
-        # ====================================================
-        # PDF REPORT
-        # ====================================================
-
-        st.subheader(
-            "📄 Personalized Report"
-        )
-
-        pdf_path = generate_pdf(
-            user_profile,
-            food_item,
-            baseline_text,
-            ai_text
-        )
-
-        with open(
-            pdf_path,
-            "rb"
-        ) as pdf_file:
-
-            st.download_button(
-                label="📥 Download PDF Report",
-                data=pdf_file,
-                file_name="diet_report.pdf",
-                mime="application/pdf"
+            pdf_path = generate_pdf(
+                patient,
+                food_item,
+                baseline_text,
+                ai_text
             )
+
+            with open(
+                pdf_path,
+                "rb"
+            ) as pdf_file:
+
+                st.download_button(
+                    "📥 Download PDF Report",
+                    data=pdf_file,
+                    file_name="diet_report.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
 
 
 # ============================================================
-# MEDICAL DISCLAIMER
+# MEAL HISTORY TAB
+# ============================================================
+
+with history_tab:
+
+    st.subheader(
+        "🗂️ Your Meal History"
+    )
+
+    history = get_meal_history(
+        current_username
+    )
+
+    if not history:
+
+        st.info(
+            "🍽️ No meals have been analyzed yet. "
+            "Your future meal assessments will appear here."
+        )
+
+    else:
+
+        st.write(
+            f"You have analyzed **{len(history)} meal(s)**."
+        )
+
+        for record in history:
+
+            (
+                meal_id,
+                food_item_history,
+                glucose_history,
+                bmi_history,
+                bp_history,
+                baseline_history,
+                probability_history,
+                ai_history,
+                created_at
+            ) = record
+
+            st.markdown(
+                f"""
+                <div class="history-card">
+
+                    <div class="history-food">
+                        🍽️ {html.escape(food_item_history)}
+                    </div>
+
+                    <div class="history-date">
+                        🕒 {created_at}
+                    </div>
+
+                    <div class="history-result">
+                        🩸 Glucose: {glucose_history} mg/dL
+                        &nbsp; | &nbsp;
+                        ⚖️ BMI: {bmi_history}
+                        &nbsp; | &nbsp;
+                        ❤️ BP: {bp_history} mmHg
+                        <br><br>
+
+                        📊 {html.escape(baseline_history)}
+                    </div>
+
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            with st.expander(
+                "🧠 View AI assessment"
+            ):
+
+                st.write(
+                    ai_history
+                )
+
+            st.divider()
+
+
+# ============================================================
+# PROFILE TAB
+# ============================================================
+
+with profile_tab:
+
+    st.subheader(
+        "👤 My Profile"
+    )
+
+    st.markdown(
+        f"""
+        <div class="history-card">
+
+        <div class="history-food">
+        👤 {html.escape(patient["name"])}
+        </div>
+
+        <div class="history-result">
+
+        🔐 Username: {html.escape(patient["username"])}<br>
+        🎂 Age: {patient["age"]}<br>
+        🩺 Diabetes status: {html.escape(patient["diabetes_type"])}<br>
+        🩸 Glucose: {patient["glucose"]} mg/dL<br>
+        ⚖️ BMI: {patient["bmi"]}<br>
+        ❤️ Blood Pressure: {patient["blood_pressure"]} mmHg<br>
+        🥗 Dietary preference: {html.escape(patient["dietary_preference"])}<br>
+        🚫 Allergies: {html.escape(patient["allergies"])}<br>
+        🏃 Activity level: {html.escape(patient["activity_level"])}
+
+        </div>
+
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+# ============================================================
+# DISCLAIMER
 # ============================================================
 
 st.markdown("---")
 
 st.caption(
-    "⚠️ **Medical Disclaimer:** This application is an "
-    "educational AI/ML project and is not intended to diagnose, "
-    "treat, cure, or prevent diabetes. Please consult a qualified "
-    "healthcare professional for medical advice."
+    "⚠️ Medical Disclaimer: This application is an educational "
+    "AI/ML project. It does not diagnose, treat, cure or prevent "
+    "diabetes and should not replace advice from a qualified "
+    "healthcare professional."
 )
 
 
@@ -1254,11 +1942,11 @@ st.caption(
 
 st.markdown(
     """
-<div class="footer-text">
+    <div class="footer-text">
     🩺 <b>Diabetic Diet Advisory</b>
     &nbsp; • &nbsp;
     Python + Streamlit + Machine Learning + Generative AI
-</div>
-""",
+    </div>
+    """,
     unsafe_allow_html=True
 )
