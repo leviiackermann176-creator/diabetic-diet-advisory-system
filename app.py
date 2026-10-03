@@ -10,6 +10,7 @@ import sqlite3
 from datetime import datetime
 import html
 import os
+import textwrap
 
 
 # ============================================================
@@ -317,6 +318,57 @@ def save_patient_profile(
 
     conn.commit()
     conn.close()
+
+
+def update_patient_profile(
+    username,
+    name,
+    age,
+    diabetes_type,
+    glucose,
+    bmi,
+    blood_pressure,
+    dietary_preference,
+    allergies,
+    activity_level,
+):
+    """Update the editable patient information for an existing account."""
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE patients
+        SET
+            name = ?,
+            age = ?,
+            diabetes_type = ?,
+            glucose = ?,
+            bmi = ?,
+            blood_pressure = ?,
+            dietary_preference = ?,
+            allergies = ?,
+            activity_level = ?
+        WHERE username = ?
+        """,
+        (
+            name,
+            age,
+            diabetes_type,
+            glucose,
+            bmi,
+            blood_pressure,
+            dietary_preference,
+            allergies,
+            activity_level,
+            username,
+        ),
+    )
+
+    conn.commit()
+    updated = cursor.rowcount > 0
+    conn.close()
+    return updated
 
 
 def save_meal_history(
@@ -1256,15 +1308,19 @@ with st.sidebar:
         unsafe_allow_html=True,
     )
 
-    st.markdown(
+    sidebar_profile_html = textwrap.dedent(
         f"""
         <div class="sidebar-info">
-        🎂 Age: {patient["age"]}<br>
-        🩸 Glucose: {patient["glucose"]} mg/dL<br>
-        ⚖️ BMI: {patient["bmi"]}<br>
-        ❤️ BP: {patient["blood_pressure"]} mmHg
+            🎂 Age: {patient["age"]}<br>
+            🩸 Glucose: {patient["glucose"]} mg/dL<br>
+            ⚖️ BMI: {patient["bmi"]}<br>
+            ❤️ BP: {patient["blood_pressure"]} mmHg
         </div>
-        """,
+        """
+    )
+
+    st.markdown(
+        sidebar_profile_html,
         unsafe_allow_html=True,
     )
 
@@ -1481,15 +1537,15 @@ with history_tab:
                 created_at,
             ) = record
 
-            st.markdown(
+            history_html = textwrap.dedent(
                 f"""
                 <div class="history-card">
                     <div class="history-food">
-                        🍽️ {html.escape(food_item_history)}
+                        🍽️ {html.escape(str(food_item_history))}
                     </div>
 
                     <div class="history-date">
-                        🕒 {created_at}
+                        🕒 {html.escape(str(created_at))}
                     </div>
 
                     <div class="history-result">
@@ -1499,10 +1555,14 @@ with history_tab:
                         &nbsp; | &nbsp;
                         ❤️ BP: {bp_history} mmHg
                         <br><br>
-                        📊 {html.escape(baseline_history)}
+                        📊 {html.escape(str(baseline_history))}
                     </div>
                 </div>
-                """,
+                """
+            )
+
+            st.markdown(
+                history_html,
                 unsafe_allow_html=True,
             )
 
@@ -1519,37 +1579,217 @@ with history_tab:
 with profile_tab:
     st.subheader("👤 My Profile")
 
-    st.markdown(
-        f"""
-        <div class="history-card">
-
-            <div class="history-food">
-                👤 {html.escape(patient["name"])}
-            </div>
-
-            <div class="history-result">
-                🔐 Username: {html.escape(patient["username"])}<br>
-                🎂 Age: {patient["age"]}<br>
-                🩺 Diabetes status:
-                {html.escape(patient["diabetes_type"])}<br>
-                🩸 Glucose: {patient["glucose"]} mg/dL<br>
-                ⚖️ BMI: {patient["bmi"]}<br>
-                ❤️ Blood Pressure:
-                {patient["blood_pressure"]} mmHg<br>
-                🥗 Dietary preference:
-                {html.escape(patient["dietary_preference"])}<br>
-                🚫 Allergies:
-                {html.escape(patient["allergies"])}<br>
-                🏃 Activity level:
-                {html.escape(patient["activity_level"])}<br>
-                📅 Account created:
-                {html.escape(patient["created_at"])}
-            </div>
-
-        </div>
-        """,
-        unsafe_allow_html=True,
+    st.info(
+        "You can update your patient information at any time. "
+        "Your username cannot be changed because it identifies your account."
     )
+
+    edit_profile = st.toggle(
+        "✏️ Edit profile",
+        value=False,
+        key="edit_profile_toggle",
+    )
+
+    if edit_profile:
+        # Convert stored values to the option lists safely.
+        diabetes_options = [
+            "Not diagnosed / Prefer not to say",
+            "Type 1 diabetes",
+            "Type 2 diabetes",
+            "Prediabetes",
+            "Gestational diabetes",
+            "Other",
+        ]
+
+        diet_options = [
+            "No specific preference",
+            "Vegetarian",
+            "Vegan",
+            "Eggetarian",
+            "Non-vegetarian",
+        ]
+
+        activity_options = [
+            "Mostly sedentary",
+            "Lightly active",
+            "Moderately active",
+            "Very active",
+        ]
+
+        current_diabetes = (
+            patient["diabetes_type"]
+            if patient["diabetes_type"] in diabetes_options
+            else "Other"
+        )
+
+        current_diet = (
+            patient["dietary_preference"]
+            if patient["dietary_preference"] in diet_options
+            else "No specific preference"
+        )
+
+        current_activity = (
+            patient["activity_level"]
+            if patient["activity_level"] in activity_options
+            else "Mostly sedentary"
+        )
+
+        with st.form("edit_profile_form"):
+            st.markdown("### ✏️ Update Personal Information")
+
+            edit_name = st.text_input(
+                "Full Name",
+                value=str(patient["name"] or ""),
+            )
+
+            edit_age = st.number_input(
+                "Age",
+                min_value=1,
+                max_value=120,
+                value=int(patient["age"] or 30),
+            )
+
+            edit_diabetes_type = st.selectbox(
+                "Diabetes status",
+                diabetes_options,
+                index=diabetes_options.index(current_diabetes),
+            )
+
+            st.markdown("### 🩸 Update Health Measurements")
+
+            edit_glucose = st.number_input(
+                "Current glucose level (mg/dL)",
+                min_value=40.0,
+                max_value=500.0,
+                value=float(patient["glucose"] or 140.0),
+                step=1.0,
+            )
+
+            edit_bmi = st.number_input(
+                "BMI",
+                min_value=10.0,
+                max_value=70.0,
+                value=float(patient["bmi"] or 25.0),
+                step=0.1,
+            )
+
+            edit_bp = st.number_input(
+                "Systolic blood pressure (mmHg)",
+                min_value=60.0,
+                max_value=250.0,
+                value=float(patient["blood_pressure"] or 120.0),
+                step=1.0,
+            )
+
+            st.markdown("### 🥗 Update Dietary Information")
+
+            edit_diet = st.selectbox(
+                "Dietary preference",
+                diet_options,
+                index=diet_options.index(current_diet),
+            )
+
+            edit_allergies = st.text_input(
+                "Food allergies / intolerances",
+                value=str(patient["allergies"] or "None"),
+            )
+
+            edit_activity = st.selectbox(
+                "Typical activity level",
+                activity_options,
+                index=activity_options.index(current_activity),
+            )
+
+            save_profile_button = st.form_submit_button(
+                "💾 Save Profile Changes",
+                use_container_width=True,
+            )
+
+            if save_profile_button:
+                clean_name = edit_name.strip()
+                clean_allergies = edit_allergies.strip() or "None"
+
+                if not clean_name:
+                    st.error("Please enter your full name.")
+                else:
+                    updated = update_patient_profile(
+                        current_username,
+                        clean_name,
+                        edit_age,
+                        edit_diabetes_type,
+                        edit_glucose,
+                        edit_bmi,
+                        edit_bp,
+                        edit_diet,
+                        clean_allergies,
+                        edit_activity,
+                    )
+
+                    if updated:
+                        st.session_state.profile_saved = True
+                        st.rerun()
+                    else:
+                        st.error(
+                            "Could not update your profile. "
+                            "Please try again."
+                        )
+
+    if st.session_state.pop("profile_saved", False):
+        st.success("✅ Your profile has been updated successfully.")
+
+    # Reload the latest values after a possible update.
+    latest_patient_data = get_patient(current_username)
+
+    if latest_patient_data:
+        latest_patient = {
+            "username": latest_patient_data[0],
+            "name": latest_patient_data[1],
+            "age": latest_patient_data[2],
+            "diabetes_type": latest_patient_data[3],
+            "glucose": latest_patient_data[4],
+            "bmi": latest_patient_data[5],
+            "blood_pressure": latest_patient_data[6],
+            "dietary_preference": latest_patient_data[7],
+            "allergies": latest_patient_data[8],
+            "activity_level": latest_patient_data[9],
+            "created_at": latest_patient_data[10],
+        }
+
+        profile_html = textwrap.dedent(
+            f"""
+            <div class="history-card">
+                <div class="history-food">
+                    👤 {html.escape(str(latest_patient["name"]))}
+                </div>
+
+                <div class="history-result">
+                    🔐 Username:
+                    {html.escape(str(latest_patient["username"]))}<br>
+                    🎂 Age: {latest_patient["age"]}<br>
+                    🩺 Diabetes status:
+                    {html.escape(str(latest_patient["diabetes_type"]))}<br>
+                    🩸 Glucose:
+                    {latest_patient["glucose"]} mg/dL<br>
+                    ⚖️ BMI: {latest_patient["bmi"]}<br>
+                    ❤️ Blood Pressure:
+                    {latest_patient["blood_pressure"]} mmHg<br>
+                    🥗 Dietary preference:
+                    {html.escape(str(latest_patient["dietary_preference"]))}<br>
+                    🚫 Allergies:
+                    {html.escape(str(latest_patient["allergies"]))}<br>
+                    🏃 Activity level:
+                    {html.escape(str(latest_patient["activity_level"]))}<br>
+                    📅 Account created:
+                    {html.escape(str(latest_patient["created_at"]))}
+                </div>
+            </div>
+            """
+        )
+
+        st.markdown(
+            profile_html,
+            unsafe_allow_html=True,
+        )
 
 
 # ============================================================
