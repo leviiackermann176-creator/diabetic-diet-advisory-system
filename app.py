@@ -1537,34 +1537,27 @@ with history_tab:
                 created_at,
             ) = record
 
-            history_html = textwrap.dedent(
-                f"""
-                <div class="history-card">
-                    <div class="history-food">
-                        🍽️ {html.escape(str(food_item_history))}
-                    </div>
-
-                    <div class="history-date">
-                        🕒 {html.escape(str(created_at))}
-                    </div>
-
-                    <div class="history-result">
-                        🩸 Glucose: {glucose_history} mg/dL
-                        &nbsp; | &nbsp;
-                        ⚖️ BMI: {bmi_history}
-                        &nbsp; | &nbsp;
-                        ❤️ BP: {bp_history} mmHg
-                        <br><br>
-                        📊 {html.escape(str(baseline_history))}
-                    </div>
-                </div>
-                """
+            # Build HTML without indentation so Streamlit never interprets it as a code block.
+            history_html = (
+                '<div class="history-card">'
+                '<div class="history-food">🍽️ '
+                + html.escape(str(food_item_history))
+                + '</div>'
+                '<div class="history-date">🕒 '
+                + html.escape(str(created_at))
+                + '</div>'
+                '<div class="history-result">'
+                + f'🩸 Glucose: {glucose_history} mg/dL'
+                + '&nbsp; | &nbsp;'
+                + f'⚖️ BMI: {bmi_history}'
+                + '&nbsp; | &nbsp;'
+                + f'❤️ BP: {bp_history} mmHg'
+                + '<br><br>📊 '
+                + html.escape(str(baseline_history))
+                + '</div></div>'
             )
 
-            st.markdown(
-                history_html,
-                unsafe_allow_html=True,
-            )
+            st.markdown(history_html, unsafe_allow_html=True)
 
             with st.expander("🧠 View AI assessment"):
                 st.write(ai_history)
@@ -1755,41 +1748,27 @@ with profile_tab:
             "created_at": latest_patient_data[10],
         }
 
-        profile_html = textwrap.dedent(
-            f"""
-            <div class="history-card">
-                <div class="history-food">
-                    👤 {html.escape(str(latest_patient["name"]))}
-                </div>
-
-                <div class="history-result">
-                    🔐 Username:
-                    {html.escape(str(latest_patient["username"]))}<br>
-                    🎂 Age: {latest_patient["age"]}<br>
-                    🩺 Diabetes status:
-                    {html.escape(str(latest_patient["diabetes_type"]))}<br>
-                    🩸 Glucose:
-                    {latest_patient["glucose"]} mg/dL<br>
-                    ⚖️ BMI: {latest_patient["bmi"]}<br>
-                    ❤️ Blood Pressure:
-                    {latest_patient["blood_pressure"]} mmHg<br>
-                    🥗 Dietary preference:
-                    {html.escape(str(latest_patient["dietary_preference"]))}<br>
-                    🚫 Allergies:
-                    {html.escape(str(latest_patient["allergies"]))}<br>
-                    🏃 Activity level:
-                    {html.escape(str(latest_patient["activity_level"]))}<br>
-                    📅 Account created:
-                    {html.escape(str(latest_patient["created_at"]))}
-                </div>
-            </div>
-            """
+        # Build HTML as a single unindented string so Streamlit renders it as HTML.
+        profile_html = (
+            '<div class="history-card">'
+            '<div class="history-food">👤 '
+            + html.escape(str(latest_patient["name"]))
+            + '</div>'
+            '<div class="history-result">'
+            + '🔐 Username: ' + html.escape(str(latest_patient["username"])) + '<br>'
+            + f'🎂 Age: {latest_patient["age"]}<br>'
+            + '🩺 Diabetes status: ' + html.escape(str(latest_patient["diabetes_type"])) + '<br>'
+            + f'🩸 Glucose: {latest_patient["glucose"]} mg/dL<br>'
+            + f'⚖️ BMI: {latest_patient["bmi"]}<br>'
+            + f'❤️ Blood Pressure: {latest_patient["blood_pressure"]} mmHg<br>'
+            + '🥗 Dietary preference: ' + html.escape(str(latest_patient["dietary_preference"])) + '<br>'
+            + '🚫 Allergies: ' + html.escape(str(latest_patient["allergies"])) + '<br>'
+            + '🏃 Activity level: ' + html.escape(str(latest_patient["activity_level"])) + '<br>'
+            + '📅 Account created: ' + html.escape(str(latest_patient["created_at"]))
+            + '</div></div>'
         )
 
-        st.markdown(
-            profile_html,
-            unsafe_allow_html=True,
-        )
+        st.markdown(profile_html, unsafe_allow_html=True)
 
 
 # ============================================================
